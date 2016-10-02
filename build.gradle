@@ -1,0 +1,64 @@
+// --------------------------------------------------------------------------------------------------------------------
+plugins {
+    id 'nebula.ospackage' version '4.0.0'
+    id "de.undercouch.download" version '3.1.1'
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+task downloadPackages(type: de.undercouch.gradle.tasks.download.Download) {
+    src "https://github.com/tonsky/FiraCode/releases/download/${version}/FiraCode_${version}.zip"
+    dest project.file("$buildDir/downloaded/FiraCode_${version}.zip")
+    onlyIfNewer true
+    acceptAnyCertificate true
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+def extractionDirectory = project.file("$buildDir/extracted")
+
+task extractPackages(dependsOn: downloadPackages) {
+
+    outputs.dir extractionDirectory
+
+    doLast {
+        copy {
+            from zipTree(downloadPackages.dest)
+            into extractionDirectory
+        }
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+def targetDirectory = '/usr/share/fonts/fira-code'
+
+ospackage {
+    vendor = 'Nikita Prokopov'
+    url = 'https://github.com/tonsky/FiraCode'
+    license = 'SIL Open Font License, Version 1.1'
+
+    summary = 'Fira Code: monospaced font with programming ligatures.'
+    description = 'Fira Code is an extension of the Fira Mono font containing a set of ligatures for common programming multi-character combinations. This is just a font rendering feature: underlying code remains ASCII-compatible. This helps to read and understand code faster. For some frequent sequences like .. or //, ligatures allow us to correct spacing.'
+
+    packageGroup = 'User Interface/X'
+
+    packager = 'Andreas Guther'
+
+    version = version
+    release = rpmRelease
+    arch = NOARCH
+    os = LINUX
+
+    user = 'root'
+
+    into "$targetDirectory"
+
+    from("$extractionDirectory/otf") {
+        into ''
+    }
+}
+
+buildRpm {
+    dependsOn extractPackages
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+defaultTasks 'clean', 'buildRpm'
