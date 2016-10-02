@@ -51,7 +51,7 @@ ospackage {
 
     into "$targetDirectory"
 
-    from("$extractionDirectory/otf") {
+    from("$extractionDirectory/ttf") {
         into ''
     }
 }
